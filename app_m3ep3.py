@@ -79,6 +79,10 @@ class M3EP():
         }
 
 def plot_events(events_data, threshold, next_threshold):
+    if events_data.empty:
+        st.warning(f'Não há eventos de precipitação igual ou superior ao limiar de {threshold}.')
+        return
+    
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=events_data.index, y=events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'],
                              mode='lines', name='Precipitação diária', marker=dict(color='blue')))
@@ -89,7 +93,8 @@ def plot_events(events_data, threshold, next_threshold):
     
     # Definindo os limites do eixo y para garantir que o máximo seja menor que o mínimo do limiar seguinte
     if next_threshold in m3ep.result_:
-        fig.update_yaxes(range=[0, m3ep.result_[next_threshold]['limiar']])
+        next_limiar = m3ep.result_[next_threshold]['limiar']
+        fig.update_yaxes(range=[0, next_limiar])
     
     st.plotly_chart(fig)
 
@@ -135,7 +140,11 @@ for uploaded_file in uploaded_files:
     st.table(formatted_results)  # Visualizador de tabela estilo Excel
     resultados[uploaded_file.name[:-4]] = formatted_results
 
-st.subheader('5º Exportar resultados para JSON')
+st.subheader('5º Gráficos dos Eventos')
+for threshold, next_threshold in [('moderado', 'forte'), ('forte', 'muito forte'), ('muito forte', None)]:
+    plot_events(m3ep.events_data_.get(threshold, pd.DataFrame()), threshold, next_threshold)
+
+st.subheader('6º Exportar resultados para JSON')
 def convert_df(df):
     return df.to_json().encode('utf-8')
 
@@ -146,8 +155,3 @@ st.download_button(
     file_name=f'm3ep_resultados_{start_date}-{end_date}.json',
     mime='text/json',
 )
-
-st.subheader('6º Gráficos dos Eventos')
-thresholds = list(m3ep.result_.keys())
-for i in range(len(thresholds)-1):
-    plot_events(m3ep.events_data_[thresholds[i]], thresholds[i], thresholds[i+1])
