@@ -74,9 +74,19 @@ class M3EP():
         
         self.events_data_ = {
             'moderado': data[data[column] >= moderated],
-            'forte': data[(data[column] >= strong) & (data[column] < very_strong)],
+            'forte': data[data[column].between(strong, very_strong)],
             'muito forte': data[data[column] >= very_strong]
         }
+
+def plot_events(events_data, threshold):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=events_data.index, y=events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'],
+                             mode='lines', name='Precipitação diária', marker=dict(color='blue')))
+    fig.update_layout(title=f'Eventos de precipitação igual ou superior ao limiar de {threshold}',
+                      xaxis_title='Data',
+                      yaxis_title='Precipitação (mm)',
+                      showlegend=True)
+    st.plotly_chart(fig, use_container_width=True)
 
 st.title("Metodologia Estatística dos Eventos Extremos de Precipitação")
 st.header('M3EP')
@@ -133,12 +143,5 @@ st.download_button(
 )
 
 st.subheader('6º Gráficos dos Eventos')
-for category in m3ep.events_data_:
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=m3ep.events_data_[category].index, y=m3ep.events_data_[category]['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'],
-                             mode='lines', name='Precipitação diária', marker=dict(color='blue')))
-    fig.update_layout(title=f'Eventos de precipitação igual ou superior ao limiar de {category}',
-                      xaxis_title='Data',
-                      yaxis_title='Precipitação (mm)',
-                      showlegend=True)
-    st.plotly_chart(fig, use_container_width=True)
+for category, events_data in m3ep.events_data_.items():
+    plot_events(events_data, category)
