@@ -1,13 +1,13 @@
-import pandas as pd
 from datetime import datetime
-import matplotlib.pyplot as plt
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
 class M3EP():
     
     def __init__(self):
         pass
-   
+    
     def read_data(self, filepath, pattern='bdmep'):
         if pattern == 'bdmep':
             data = pd.read_csv(filepath, skiprows=10, sep=';', decimal=',') 
@@ -31,11 +31,11 @@ class M3EP():
     def remove_zero_pr(self):
         column = self.data_.columns[0]
         return self.data_[self.data_[column] > 0]
-   
+    
     def select_by_date(self, start_date, end_date):
         data = self.data_.loc[start_date:end_date]
         self.data_ = data
-   
+    
     def count_events(self, lower_limit, upper_limit):
         events = self.data_.query(f'`PRECIPITACAO TOTAL DIARIO (AUT)(mm)` >= {lower_limit} & `PRECIPITACAO TOTAL DIARIO (AUT)(mm)` < {upper_limit}')
         n_events = len(events)
@@ -77,19 +77,6 @@ class M3EP():
             'forte': data[(data[column] >= strong) & (data[column] < very_strong)],
             'muito forte': data[data[column] >= very_strong]
         }
-
-def plot_events(events_data, threshold):
-    if events_data.empty:
-        st.warning(f'Não há eventos de precipitação igual ou superior ao limiar de {threshold}.')
-        return
-    
-    plt.figure(figsize=(10, 6))
-    plt.plot(events_data.index, events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'], marker='o', linestyle='-', color='blue')
-    plt.title(f'Eventos de precipitação igual ou superior ao limiar de {threshold}')
-    plt.xlabel('Data')
-    plt.ylabel('Precipitação (mm)')
-    plt.xticks(rotation=45)
-    st.pyplot()
 
 st.title("Metodologia Estatística dos Eventos Extremos de Precipitação")
 st.header('M3EP')
@@ -147,5 +134,10 @@ st.download_button(
 
 st.subheader('6º Gráficos dos Eventos')
 for category in m3ep.events_data_:
-    plot_events(m3ep.events_data_[category], category)
-
+    plt.figure(figsize=(10, 6))
+    plt.plot(m3ep.events_data_[category].index, m3ep.events_data_[category]['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'], marker='o', linestyle='-', color='b')
+    plt.title(f'Eventos de precipitação igual ou superior ao limiar de {category}')
+    plt.xlabel('Data')
+    plt.ylabel('Precipitação (mm)')
+    plt.xticks(rotation=45)
+    st.pyplot(plt)
