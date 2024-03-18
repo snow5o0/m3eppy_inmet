@@ -74,7 +74,7 @@ class M3EP():
         
         self.events_data_ = {
             'moderado': data[data[column] >= moderated],
-            'forte': data[data[column] >= strong],
+            'forte': data[(data[column] >= strong) & (data[column] < very_strong)],
             'muito forte': data[data[column] >= very_strong]
         }
 
