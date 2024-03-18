@@ -74,11 +74,11 @@ class M3EP():
         
         self.events_data_ = {
             'moderado': data[data[column] >= moderated],
-            'forte': data[data[column] >= strong],
+            'forte': data[(data[column] >= strong) & (data[column] < very_strong)],
             'muito forte': data[data[column] >= very_strong]
         }
 
-def plot_events(events_data, threshold, next_threshold):
+def plot_events(events_data, threshold):
     if events_data.empty:
         st.warning(f'Não há eventos de precipitação igual ou superior ao limiar de {threshold}.')
         return
@@ -90,12 +90,6 @@ def plot_events(events_data, threshold, next_threshold):
                       xaxis_title='Data',
                       yaxis_title='Precipitação (mm)',
                       showlegend=True)
-    
-    # Definindo os limites do eixo y para garantir que o máximo seja menor que o mínimo do limiar seguinte
-    if next_threshold in m3ep.result_ and next_threshold != 'muito forte':
-        next_limiar = m3ep.result_[next_threshold]['limiar']
-        fig.update_yaxes(range=[0, next_limiar])
-    
     st.plotly_chart(fig)
 
 st.title("Metodologia Estatística dos Eventos Extremos de Precipitação")
@@ -154,5 +148,5 @@ st.download_button(
 
 st.subheader('6º Gráficos dos Eventos')
 for category in m3ep.events_data_:
-    next_category = 'muito forte' if category == 'forte' else 'forte'
-    plot_events(m3ep.events_data_[category], category, next_category)
+    plot_events(m3ep.events_data_[category], category)
+
