@@ -2,7 +2,6 @@ from datetime import datetime
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 
 class M3EP():
     
@@ -22,8 +21,9 @@ class M3EP():
                 return
             if 'Unnamed: 3' in data.columns:
                 data.drop('Unnamed: 3', axis=1, inplace=True)
-            data.columns = ['Data Medicao', 'PRECIPITACAO TOTAL DIARIO (AUT)(mm)', 'TEMPERATURA MEDIA DIARIA (AUT)(°C)']
-            data.set_index('Data Medicao', inplace=True)
+            data.columns = ['date', 'daily_pr_mm']
+            data.date = pd.to_datetime(data.date)
+            data.set_index('date', inplace=True)
         else:
             print('You need to specify how to read a new pattern.')
             data = None
@@ -38,7 +38,7 @@ class M3EP():
         self.data_ = data
     
     def count_events(self, lower_limit, upper_limit):
-        events = self.data_.query(f'`PRECIPITACAO TOTAL DIARIO (AUT)(mm)` >= {lower_limit} & `PRECIPITACAO TOTAL DIARIO (AUT)(mm)` < {upper_limit}')
+        events = self.data_.query(f'daily_pr_mm >= {lower_limit} & daily_pr_mm < {upper_limit}')
         n_events = len(events)
         return n_events
     
@@ -121,30 +121,24 @@ for uploaded_file in uploaded_files:
     st.table(formatted_results)  # Visualizador de tabela estilo Excel
     resultados[uploaded_file.name[:-4]] = formatted_results
 
-# Adicionando gráficos para cada limiar de eventos extremos
-if hasattr(m3ep, 'events_data_'):
-    st.subheader('5º Gráficos de Eventos Extremos')
-    for threshold in ['moderado', 'forte', 'muito forte']:
-        limiar = m3ep.result_[threshold]['limiar']
-        eventos = m3ep.events_data_[threshold]
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=eventos.index, y=eventos['daily_pr_mm'], mode='lines', name='Precipitação diária'))
-        fig.update_layout(title=f'Eventos Extremos - Limiar {threshold.capitalize()} ({limiar} mm)',
-                          xaxis_title='Data',
-                          yaxis_title='Precipitação (mm)',
-                          showlegend=True)
-        st.plotly_chart(fig, use_container_width=True)
-
-st.subheader('6º Exportar resultados para JSON')
-@st.cache_data
+st.subheader('5º Exportar resultados para JSON')
 def convert_df(df):
     return df.to_json().encode('utf-8')
 
 json = convert_df(pd.DataFrame(resultados))
-
 st.download_button(
     label="Salve os resultados como JSON",
     data=json,
     file_name=f'm3ep_resultados_{start_date}-{end_date}.json',
     mime='text/json',
 )
+
+st.subheader('6º Gráficos dos Eventos')
+for category in m3ep.events_data_:
+    plt.figure(figsize=(10, 6))
+    plt.plot(m3ep.events_data_[category].index, m3ep.events_data_[category]['daily_pr_mm'], marker='o', linestyle='-', color='b')
+    plt.title(f'Eventos de precipitação igual ou superior ao limiar de {category}')
+    plt.xlabel('Data')
+    plt.ylabel('Precipitação (mm)')
+    plt.xticks(rotation=45)
+    st.pyplot(plt)
