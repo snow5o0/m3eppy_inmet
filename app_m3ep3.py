@@ -92,7 +92,7 @@ def plot_events(events_data, threshold, next_threshold):
                       showlegend=True)
     
     # Definindo os limites do eixo y para garantir que o máximo seja menor que o mínimo do limiar seguinte
-    if next_threshold in m3ep.result_:
+    if next_threshold in m3ep.result_ and next_threshold != 'muito forte':
         next_limiar = m3ep.result_[next_threshold]['limiar']
         fig.update_yaxes(range=[0, next_limiar])
     
@@ -140,11 +140,7 @@ for uploaded_file in uploaded_files:
     st.table(formatted_results)  # Visualizador de tabela estilo Excel
     resultados[uploaded_file.name[:-4]] = formatted_results
 
-st.subheader('5º Gráficos dos Eventos')
-for threshold, next_threshold in [('moderado', 'forte'), ('forte', 'muito forte'), ('muito forte', None)]:
-    plot_events(m3ep.events_data_.get(threshold, pd.DataFrame()), threshold, next_threshold)
-
-st.subheader('6º Exportar resultados para JSON')
+st.subheader('5º Exportar resultados para JSON')
 def convert_df(df):
     return df.to_json().encode('utf-8')
 
@@ -155,3 +151,8 @@ st.download_button(
     file_name=f'm3ep_resultados_{start_date}-{end_date}.json',
     mime='text/json',
 )
+
+st.subheader('6º Gráficos dos Eventos')
+for category in m3ep.events_data_:
+    next_category = 'muito forte' if category == 'forte' else 'forte'
+    plot_events(m3ep.events_data_[category], category, next_category)
