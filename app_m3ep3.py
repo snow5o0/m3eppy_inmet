@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import streamlit as st
 
 class M3EP():
@@ -83,14 +83,13 @@ def plot_events(events_data, threshold):
         st.warning(f'Não há eventos de precipitação igual ou superior ao limiar de {threshold}.')
         return
     
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=events_data.index, y=events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'],
-                             mode='lines', name='Precipitação diária', marker=dict(color='blue')))
-    fig.update_layout(title=f'Eventos de precipitação igual ou superior ao limiar de {threshold}',
-                      xaxis_title='Data',
-                      yaxis_title='Precipitação (mm)',
-                      showlegend=True)
-    st.plotly_chart(fig)
+    plt.figure(figsize=(10, 6))
+    plt.bar(events_data.index, events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'], color='blue')
+    plt.title(f'Eventos de precipitação igual ou superior ao limiar de {threshold}')
+    plt.xlabel('Data')
+    plt.ylabel('Precipitação (mm)')
+    plt.xticks(rotation=45)
+    st.pyplot()
 
 st.title("Metodologia Estatística dos Eventos Extremos de Precipitação")
 st.header('M3EP')
@@ -149,4 +148,3 @@ st.download_button(
 st.subheader('6º Gráficos dos Eventos')
 for category in m3ep.events_data_:
     plot_events(m3ep.events_data_[category], category)
-
