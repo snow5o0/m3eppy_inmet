@@ -74,11 +74,11 @@ class M3EP():
         
         self.events_data_ = {
             'moderado': data[data[column] >= moderated],
-            'forte': data[data[column].between(strong, very_strong)],
+            'forte': data[data[column] >= strong],
             'muito forte': data[data[column] >= very_strong]
         }
 
-def plot_events(events_data, threshold):
+def plot_events(events_data, threshold, next_threshold):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=events_data.index, y=events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'],
                              mode='lines', name='Precipitação diária', marker=dict(color='blue')))
@@ -86,7 +86,12 @@ def plot_events(events_data, threshold):
                       xaxis_title='Data',
                       yaxis_title='Precipitação (mm)',
                       showlegend=True)
-    st.plotly_chart(fig, use_container_width=True)
+    
+    # Definindo os limites do eixo y para garantir que o máximo seja menor que o mínimo do limiar seguinte
+    if next_threshold in m3ep.result_:
+        fig.update_yaxes(range=[0, m3ep.result_[next_threshold]['limiar']])
+    
+    st.plotly_chart(fig)
 
 st.title("Metodologia Estatística dos Eventos Extremos de Precipitação")
 st.header('M3EP')
@@ -143,5 +148,6 @@ st.download_button(
 )
 
 st.subheader('6º Gráficos dos Eventos')
-for category, events_data in m3ep.events_data_.items():
-    plot_events(events_data, category)
+thresholds = list(m3ep.result_.keys())
+for i in range(len(thresholds)-1):
+    plot_events(m3ep.events_data_[thresholds[i]], thresholds[i], thresholds[i+1])
