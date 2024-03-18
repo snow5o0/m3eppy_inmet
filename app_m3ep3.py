@@ -10,7 +10,7 @@ class M3EP():
    
     def read_data(self, filepath, pattern='funceme'):
         if pattern == 'bdmep':
-            data = pd.read_csv(filepath, skiprows=10, sep=';', decimal='.') 
+            data = pd.read_csv(filepath, skiprows=10, sep=';', decimal=',') 
             data['Data Medicao'] = pd.to_datetime(data['Data Medicao'], format='%Y-%m-%d')
             data.drop('Unnamed: 2', axis=1, inplace=True)
             data.columns = ['date', 'daily_pr_mm']
