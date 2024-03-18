@@ -84,7 +84,7 @@ def plot_events(events_data, threshold):
         return
     
     plt.figure(figsize=(10, 6))
-    plt.bar(events_data.index, events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'], color='blue')
+    plt.plot(events_data.index, events_data['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'], marker='o', linestyle='-', color='blue')
     plt.title(f'Eventos de precipitação igual ou superior ao limiar de {threshold}')
     plt.xlabel('Data')
     plt.ylabel('Precipitação (mm)')
@@ -148,3 +148,4 @@ st.download_button(
 st.subheader('6º Gráficos dos Eventos')
 for category in m3ep.events_data_:
     plot_events(m3ep.events_data_[category], category)
+
