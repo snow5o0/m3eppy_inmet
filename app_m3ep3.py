@@ -1,13 +1,13 @@
-from datetime import datetime
-import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+from datetime import datetime
+import plotly.graph_objects as go
+import streamlit as st
 
 class M3EP():
     
     def __init__(self):
         pass
-    
+   
     def read_data(self, filepath, pattern='bdmep'):
         if pattern == 'bdmep':
             data = pd.read_csv(filepath, skiprows=10, sep=';', decimal=',') 
@@ -21,9 +21,8 @@ class M3EP():
                 return
             if 'Unnamed: 3' in data.columns:
                 data.drop('Unnamed: 3', axis=1, inplace=True)
-            data.columns = ['date', 'daily_pr_mm']
-            data.date = pd.to_datetime(data.date)
-            data.set_index('date', inplace=True)
+            data.columns = ['Data Medicao', 'PRECIPITACAO TOTAL DIARIO (AUT)(mm)', 'TEMPERATURA MEDIA DIARIA (AUT)(°C)']
+            data.set_index('Data Medicao', inplace=True)
         else:
             print('You need to specify how to read a new pattern.')
             data = None
@@ -32,13 +31,13 @@ class M3EP():
     def remove_zero_pr(self):
         column = self.data_.columns[0]
         return self.data_[self.data_[column] > 0]
-    
+   
     def select_by_date(self, start_date, end_date):
         data = self.data_.loc[start_date:end_date]
         self.data_ = data
-    
+   
     def count_events(self, lower_limit, upper_limit):
-        events = self.data_.query(f'daily_pr_mm >= {lower_limit} & daily_pr_mm < {upper_limit}')
+        events = self.data_.query(f'`PRECIPITACAO TOTAL DIARIO (AUT)(mm)` >= {lower_limit} & `PRECIPITACAO TOTAL DIARIO (AUT)(mm)` < {upper_limit}')
         n_events = len(events)
         return n_events
     
@@ -135,13 +134,11 @@ st.download_button(
 
 st.subheader('6º Gráficos dos Eventos')
 for category in m3ep.events_data_:
-    if not m3ep.events_data_[category].empty:
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.plot(m3ep.events_data_[category].index, m3ep.events_data_[category].iloc[:, 0], marker='o', linestyle='-', color='b')
-        ax.set_title(f'Eventos de precipitação igual ou superior ao limiar de {category}')
-        ax.set_xlabel('Data')
-        ax.set_ylabel('Precipitação (mm)')
-        ax.tick_params(axis='x', rotation=45)
-        st.pyplot(fig)
-    else:
-        st.write(f'Não há eventos de precipitação igual ou superior ao limiar de {category}.')
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=m3ep.events_data_[category].index, y=m3ep.events_data_[category]['PRECIPITACAO TOTAL DIARIO (AUT)(mm)'],
+                             mode='lines', name='Precipitação diária', marker=dict(color='blue')))
+    fig.update_layout(title=f'Eventos de precipitação igual ou superior ao limiar de {category}',
+                      xaxis_title='Data',
+                      yaxis_title='Precipitação (mm)',
+                      showlegend=True)
+    st.plotly_chart(fig, use_container_width=True)
