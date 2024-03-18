@@ -135,10 +135,13 @@ st.download_button(
 
 st.subheader('6º Gráficos dos Eventos')
 for category in m3ep.events_data_:
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.plot(m3ep.events_data_[category].index, m3ep.events_data_[category]['daily_pr_mm'], marker='o', linestyle='-', color='b')
-    ax.set_title(f'Eventos de precipitação igual ou superior ao limiar de {category}')
-    ax.set_xlabel('Data')
-    ax.set_ylabel('Precipitação (mm)')
-    ax.tick_params(axis='x', rotation=45)
-    st.pyplot(fig)
+    if not m3ep.events_data_[category].empty:
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.plot(m3ep.events_data_[category].index, m3ep.events_data_[category].iloc[:, 0], marker='o', linestyle='-', color='b')
+        ax.set_title(f'Eventos de precipitação igual ou superior ao limiar de {category}')
+        ax.set_xlabel('Data')
+        ax.set_ylabel('Precipitação (mm)')
+        ax.tick_params(axis='x', rotation=45)
+        st.pyplot(fig)
+    else:
+        st.write(f'Não há eventos de precipitação igual ou superior ao limiar de {category}.')
